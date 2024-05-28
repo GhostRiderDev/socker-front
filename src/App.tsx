@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { io, Socket } from "socket.io-client";
 
-const socket: Socket = io("http://localhost:3001", {
+const socket: Socket = io("https://rindoor-backend.onrender.com", {
   autoConnect: false,
 });
 
@@ -11,21 +11,37 @@ function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [messages, setMessages] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
-  const [userFrom, setUserFrom] = useState<any>({
-    id: "877c505c-c018-4fb8-bc31-d78e2b05a9c0",
-    isActive: true,
-    banned: false,
-    name: "Agustina Ayelén Sosa",
-    email: "agustinaayelensosa2@gmail.com",
-    phone: "4444444444",
-    country: "Argentina",
-    province: "Buenos Aires",
-    city: "Lomas de Zamora",
-    address: "laprida 59",
-    coords: "-34.7606128,-58.39906939999999",
-    rating: 5,
-    role: "PROFESSIONAL",
-  });
+  const userFromInitialState =
+    window.location.port === "5173"
+      ? {
+          id: "68612bf1-fdd8-46f5-b184-7a8f64c4b584",
+          isActive: true,
+          banned: false,
+          name: "Pablo Antonio Alvarado Ruiz",
+          email: "paalvarador@gmail.com",
+          phone: "0964041045",
+          country: "Argentina",
+          province: "Buenos Aires",
+          city: "Buenos Aires",
+        }
+      : {
+          id: "877c505c-c018-4fb8-bc31-d78e2b05a9c0",
+          isActive: true,
+          banned: false,
+          name: "Agustina Ayelén Sosa",
+          email: "agustinaayelensosa2@gmail.com",
+          phone: "4444444444",
+          country: "Argentina",
+          province: "Buenos Aires",
+          city: "Lomas de Zamora",
+          address: "laprida 59",
+          coords: "-34.7606128,-58.39906939999999",
+          rating: 5,
+          role: "PROFESSIONAL",
+        };
+
+  const [userFrom, setUserFrom] = useState<any>(userFromInitialState);
+
   const [userTo, setUserTo] = useState<any>(null);
 
   useEffect(() => {
@@ -58,6 +74,7 @@ function App() {
         setMessages((messages) => [...messages, e]);
       });
 
+      
       socket.on("roomMessages", (e) => {
         console.log("*******MENSAJES DE LA SALA*********", e);
         setMessages(e);
@@ -101,6 +118,32 @@ function App() {
 
   console.log("******MESSAGES********+", messages);
 
+  const converToTime = (dateToConver: string) => {
+    const date = new Date(dateToConver);
+    const timeString = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+    return timeString;
+  };
+
+  
+
+  const sortedMessages = [...messages].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  const messagesByDate = sortedMessages.reduce((groups, message) => {
+    const date = new Date(message.createdAt);
+    const dateKey = date.toISOString().split("T")[0]; // Obtiene la fecha sin la hora
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
+    }
+    groups[dateKey].push(message);
+    return groups;
+  }, {});
+
   return (
     <div className="flex items-center">
       <div className="h-[90vh] bg-slate-400 w-1/4 rounded-md mx-2">
@@ -127,25 +170,34 @@ function App() {
         </div>
       </div>
       <div className="w-1/2 h-screen  relative">
-        <div className="h-5/6 mt-2 rounded-md bg-slate-700 p-2">
-          <ul className="space-y-2">
-            {messages.map((message, index) => (
-              <li
-                key={index}
-                className={`text-white  text-wrap w-1/2 py-2 px-3 rounded-lg ${
-                  message.from.id === userFrom.id
-                    ? "ml-auto bg-sky-400"
-                    : "bg-teal-400"
-                }`}
-              >
-                <p className="text-xs font-semibold text-slate-800">
-                  {" "}
-                  {message.from.name}
-                </p>
-                <p> {message.message}</p>
-              </li>
-            ))}
-          </ul>
+        <div className="h-5/6 overflow-y-auto mt-2 rounded-md bg-slate-700 p-2">
+          {Object.entries(messagesByDate).map(([date, messages]) => (
+            <div key={date}>
+              <h2 className="text-white text-center mb-2">
+                {date === new Date().toISOString().split("T")[0] ? "Hoy" : date}
+              </h2>
+              <ul className="space-y-2">
+                {messages.map((message, index) => (
+                  <li
+                    key={index}
+                    className={`text-white  text-wrap w-1/2 py-2 px-3 rounded-lg ${
+                      message.from.id === userFrom.id
+                        ? "ml-auto bg-sky-400"
+                        : "bg-teal-400"
+                    }`}
+                  >
+                    <p className="text-xs font-semibold text-slate-800 text-opacity-80">
+                      {message.from.name}
+                    </p>
+                    <p> {message.message}</p>
+                    <p className="text-xs font-semibold text-right text-rose-100">
+                      {converToTime(message.createdAt)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
         <div className="flex h-1/6 items-center bottom-0 absolute">
           <form className="flex w-[50vw] appearance-none rounded-md bg-gray-800 outline-none focus:outline-none">
