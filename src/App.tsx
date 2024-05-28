@@ -14,30 +14,34 @@ function App() {
   const userFromInitialState =
     window.location.port === "5173"
       ? {
-          id: "68612bf1-fdd8-46f5-b184-7a8f64c4b584",
+          id: "a5da798b-b58b-46cc-af42-927e2d009782",
           isActive: true,
           banned: false,
-          name: "Pablo Antonio Alvarado Ruiz",
-          email: "paalvarador@gmail.com",
-          phone: "0964041045",
+          name: "carlos Morillo",
+          email: "liamssssa@gmail.com",
+          phone: "4023215432",
           country: "Argentina",
           province: "Buenos Aires",
-          city: "Buenos Aires",
-        }
-      : {
-          id: "877c505c-c018-4fb8-bc31-d78e2b05a9c0",
-          isActive: true,
-          banned: false,
-          name: "Agustina Ayelén Sosa",
-          email: "agustinaayelensosa2@gmail.com",
-          phone: "4444444444",
-          country: "Argentina",
-          province: "Buenos Aires",
-          city: "Lomas de Zamora",
-          address: "laprida 59",
-          coords: "-34.7606128,-58.39906939999999",
+          city: "Mercedes",
+          address: "Calle 33 626",
+          coords: "-34.6496203,-59.43386160000001",
           rating: 5,
           role: "PROFESSIONAL",
+        }
+      : {
+          id: "21e64323-0cc9-447c-bf87-cf33b0b963c9",
+          isActive: true,
+          banned: false,
+          name: "liam Morillo",
+          email: "carlos.jmr90@gmail.com",
+          phone: "4023215432",
+          country: "Argentina",
+          province: "Buenos Aires",
+          city: "Mercedes",
+          address: "Calle 33 626",
+          coords: "-34.6496203,-59.43386160000001",
+          rating: 5,
+          role: "CLIENT",
         };
 
   const [userFrom, setUserFrom] = useState<any>(userFromInitialState);
@@ -67,14 +71,17 @@ function App() {
         userTo: userTo.id,
       });
 
-      const messageEvent = `message_${userFrom.id}_${userTo.id}`;
+      // quiero un evento general para todos los mensajes
+      let messageEvent;
+      if (userTo.id > userFrom.id)
+        messageEvent = `chat_${userFrom.id}_${userTo.id}`;
+      else messageEvent = `chat_${userTo.id}_${userFrom.id}`;
 
       socket.on(messageEvent, (e) => {
         console.log("********LLEGO MENSAJE********");
         setMessages((messages) => [...messages, e]);
       });
 
-      
       socket.on("roomMessages", (e) => {
         console.log("*******MENSAJES DE LA SALA*********", e);
         setMessages(e);
@@ -127,8 +134,6 @@ function App() {
     });
     return timeString;
   };
-
-  
 
   const sortedMessages = [...messages].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
